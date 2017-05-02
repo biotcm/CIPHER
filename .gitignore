@@ -1,0 +1,5 @@
+# R-related files
+.Rdata
+.Rhistory
+
+/tmp
