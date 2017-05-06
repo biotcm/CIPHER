@@ -77,7 +77,7 @@ for phenoIndex = 1:phenoNum
         nan_row = [nan_row, phenoIndex];
     end
 end
-Phenotype_Gene_Score_Matrix(isnan(Phenotype_Gene_Score_Matrix)) = -1;
+Phenotype_Gene_Score_Matrix(isnan(Phenotype_Gene_Score_Matrix)) = 0;
 Phenotype_Gene_Score_Matrix(nan_row, :) = nan;
 save('inner_pheno_gene_score.mat','Phenotype_Gene_Score_Matrix');
 dlmwrite('inner_pheno_gene_score.txt', Phenotype_Gene_Score_Matrix,'\t');

@@ -71,7 +71,7 @@ for (phenotype_index in 1:phenotype_num) {
     gene_score[is.na(gene_score)] <- 0
 
     leave_one_out_results <- c(leave_one_out_results,
-                               sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes]))
+      sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes]))
   } else {
     for (phenotype_gene_index in 1:length(phenotype_genes)) {
       new_phenotype_genes <- phenotype_genes[-phenotype_gene_index]
@@ -87,7 +87,7 @@ for (phenotype_index in 1:phenotype_num) {
       gene_score[is.na(gene_score)] <- 0
 
       leave_one_out_results <- c(leave_one_out_results,
-                                 sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes]))
+        sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes]))
     }
   }
 

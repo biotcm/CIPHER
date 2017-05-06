@@ -84,7 +84,7 @@ for phenoIndex = 1:phenoNum
         % No need to recalculate gene2phenotype closeness
         gene2phenotype_closeness(:, phenoIndex) = 0;
         gene_score = corr(inner_pheno_pheno_similarity(:, phenoIndex), gene2phenotype_closeness');
-        gene_score(isnan(gene_score)) = -1;
+        gene_score(isnan(gene_score)) = 0;
         test_result = [test_result, sum(quantile(gene_score,result_resolution)>=gene_score(origin_array))];
     else
         for dgIndex = 1:length(origin_array) % Disease gene index
@@ -95,7 +95,7 @@ for phenoIndex = 1:phenoNum
             end
             % Recalculate gene score
             gene_score = corr(inner_pheno_pheno_similarity(:, phenoIndex), gene2phenotype_closeness');
-            gene_score(isnan(gene_score)) = -1;
+            gene_score(isnan(gene_score)) = 0;
             test_result = [test_result, sum(quantile(gene_score, result_resolution)>=gene_score(origin_array(dgIndex)))];
         end
     end
