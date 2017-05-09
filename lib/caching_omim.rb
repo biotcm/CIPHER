@@ -24,7 +24,7 @@ mims = mim2gene.split("\n").map do |line|
 end
 mims.compact!
 
-# Cache MIMs locally
+# Cache MIMs
 pb = ProgressBar.create(total: mims.size, format: '%t: |%B| %a %e')
 mims.each do |mim|
   pb.title = "Caching MIM \##{mim}"
