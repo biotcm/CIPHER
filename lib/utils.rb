@@ -3,7 +3,9 @@ require 'biotcm'
 require 'ruby-progressbar'
 
 # Get a list of OMIM phenotypes
-def get_OMIM_phenotypes
+def omim_phenotypes
+  return @omim_phenotypes if @omim_phenotypes
+
   # Load mim2gene
   if File.exist?('tmp/mim2gene.txt')
     mim2gene = File.read('tmp/mim2gene.txt')
@@ -17,12 +19,13 @@ def get_OMIM_phenotypes
     col = line.split("\t")
 
     if col[0] =~ /^#/
-      nil
+      nil # throw comments
     elsif %w[gene moved/removed].include?(col[1])
-      nil
+      nil # throw non-phenotypes
     else
       col[0]
     end
   end
-  mims.compact!
+
+  @omim_phenotypes = mims.compact
 end
