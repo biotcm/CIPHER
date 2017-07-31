@@ -1,12 +1,10 @@
 #!/usr/bin/env ruby
+require 'yaml'
 require 'biotcm'
 require 'ruby-progressbar'
 
-# Get a list of OMIM phenotypes
-def omim_phenotypes
-  return @omim_phenotypes if @omim_phenotypes
-
-  # Load mim2gene
+# Load OMIM mim2gene
+def omim_mim2gene
   if File.exist?('tmp/mim2gene.txt')
     mim2gene = File.read('tmp/mim2gene.txt')
   else
@@ -14,8 +12,12 @@ def omim_phenotypes
     File.open('tmp/mim2gene.txt', 'w').puts mim2gene
   end
 
-  # Select MIMs
-  mims = mim2gene.split("\n").map do |line|
+  mim2gene
+end
+
+# Load OMIM phenotypes
+def omim_phenotypes
+  @omim_phenotypes ||= omim_mim2gene.split("\n").map do |line|
     col = line.split("\t")
 
     if col[0] =~ /^#/
@@ -25,7 +27,5 @@ def omim_phenotypes
     else
       col[0]
     end
-  end
-
-  @omim_phenotypes = mims.compact
+  end.compact
 end

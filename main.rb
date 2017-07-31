@@ -20,4 +20,6 @@ system('bundle install')
 unless File.exist?('temp/omim_content.bin')
   logger.info('Caching OMIM content...')
   system('ruby lib/caching_omim.rb')
+  logger.info('Extracting OMIM content...')
+  system('ruby lib/extract_omim.rb')
 end

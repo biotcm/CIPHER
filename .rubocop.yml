@@ -1,0 +1,23 @@
+# We should and could handle them ourselves.
+Metrics/LineLength:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Style/AlignHash:
+  Enabled: false
+Style/GuardClause:
+  Enabled: false
+
+# We prefer indented style then aligned style.
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+Style/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
