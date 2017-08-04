@@ -76,10 +76,10 @@ for (phenotype_index in 1:phenotype_num) {
     for (phenotype_gene_index in 1:length(phenotype_genes)) {
       new_phenotype_genes <- phenotype_genes[-phenotype_gene_index]
       if (length(new_phenotype_genes) == 1) {
-        gene2phenotype_closeness[,phenotype_gene_index] <-
+        gene2phenotype_closeness[,phenotype_index] <-
           exp(-gene_distances[,new_phenotype_genes]^2)
       } else {
-        gene2phenotype_closeness[,phenotype_gene_index] <-
+        gene2phenotype_closeness[,phenotype_index] <-
           apply(exp(-gene_distances[,new_phenotype_genes]^2), 1, sum)
       }
 
