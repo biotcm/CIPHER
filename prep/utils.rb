@@ -5,11 +5,11 @@ require 'ruby-progressbar'
 
 # Load OMIM mim2gene
 def omim_mim2gene
-  if File.exist?('tmp/mim2gene.txt')
-    mim2gene = File.read('tmp/mim2gene.txt')
+  if File.exist?('../temp/mim2gene.txt')
+    mim2gene = File.read('../temp/mim2gene.txt')
   else
     mim2gene = BioTCM.curl('https://omim.org/static/omim/data/mim2gene.txt')
-    File.open('tmp/mim2gene.txt', 'w').puts mim2gene
+    File.open('../temp/mim2gene.txt', 'w').puts mim2gene
   end
 
   mim2gene

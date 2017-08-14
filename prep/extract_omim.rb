@@ -29,8 +29,8 @@ end
 
 fout = {
   pheno2gene: {
-    direct: File.open('tmp/pheno2gene_direct.txt', 'w'),
-    extend: File.open('tmp/pheno2gene_extend.txt', 'w')
+    direct: File.open('../temp/pheno2gene_direct.txt', 'w'),
+    extend: File.open('../temp/pheno2gene_extend.txt', 'w')
   }
 }
 

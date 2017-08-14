@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 #
-# iCIPHER workflow
+# iCIPHER workflow - prepare all input data files
 #
 # This script describes the workflow of iCIPHER. It may take days to finish this
 # pipeline. So it is recommended to run each step separately.
@@ -19,7 +19,7 @@ system('bundle install')
 # Process OMIM content
 unless File.exist?('temp/omim_content.bin')
   logger.info('Caching OMIM content...')
-  system('ruby lib/caching_omim.rb')
+  system('ruby caching_omim.rb')
   logger.info('Extracting OMIM content...')
-  system('ruby lib/extract_omim.rb')
+  system('ruby extract_omim.rb')
 end
