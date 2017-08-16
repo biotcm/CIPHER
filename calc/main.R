@@ -1,12 +1,10 @@
 #!/usr/bin/env Rscript
+
+# Install dependencies
 source('https://aidistan.github.io/gist/R/use.packages.R')
-source('https://aidistan.github.io/gist/R/txtProgressBarETA.R')
-use.packages('igraph', 'ggplot2', 'reshape2')
+use.packages('igraph', 'pbapply', 'ggplot2', 'reshape2')
 
-# Override built-in functions
-txtProgressBar <- txtProgressBarETA
-
-# Load CIPHER-family functions
+# Load CIPHER family functions
 source('cipher.leave_one_out.R')
 
 # Load the results
@@ -20,12 +18,14 @@ if (file.exists('../temp/results.Rdata')) {
 results$old.hprd <- cipher.leave_one_out(
   '../data/old_hprd/inner_phenotype_similarity.txt',
   '../data/old_hprd/inner_ppi.txt',
-  '../data/old_hprd/inner_phenotype_gene_relation.txt'
+  '../data/old_hprd/inner_phenotype_gene_relation.txt',
+  cluster.number = 2
 )
 results$old.extended <- cipher.leave_one_out(
   '../data/old_extended/inner_phenotype_similarity.txt',
   '../data/old_extended/inner_ppi.txt',
-  '../data/old_extended/inner_phenotype_gene_relation.txt'
+  '../data/old_extended/inner_phenotype_gene_relation.txt',
+  cluster.number = 2
 )
 
 # Save the results
@@ -36,8 +36,8 @@ step <- 0.0001
 areas <- list()
 for (name in names(results)) {
   areas[[name]] <- sum(sapply(
-    seq(0, 1, step)[-1], 
-    function (x, cdf) { (cdf(x-step) + cdf(x)) / 2 * step }, 
+    seq(0, 1, step)[-1],
+    function (x, cdf) { (cdf(x-step) + cdf(x)) / 2 * step },
     ecdf(results[[name]])
   ))
 }

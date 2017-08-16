@@ -1,12 +1,14 @@
 #!/usr/bin/evn Rscript
 library(igraph)
+library(pbapply)
+library(reshape2)
 
 cipher.leave_one_out = function (
   phenotype_similarities_filepath,
   protein_protein_interactions_filepath,
   phenotype_gene_relations_filepath,
-  show.timestamp = TRUE,
-  show.progressbar = TRUE
+  cluster.number = 1,
+  show.timestamp = TRUE
 ) {
 
   if (show.timestamp)
@@ -31,7 +33,7 @@ cipher.leave_one_out = function (
   phenotype_gene_relationships <- list()
   fin <- file(phenotype_gene_relations_filepath)
   for (col in strsplit(readLines(fin), "\t")) {
-    phenotype_gene_relationships[[col[1]]] <- as.numeric(c(col[2:length(col)]))
+    phenotype_gene_relationships[[col[1]]] <- unique(as.numeric(col[2:length(col)]))
   }
   close(fin)
 
@@ -48,7 +50,7 @@ cipher.leave_one_out = function (
 
   for (phenotype_index in 1:phenotype_num) {
     phenotype_genes <- phenotype_gene_relationships[[as.character(phenotype_index)]]
-    if (is.null(phenotype_genes)) {
+    if (length(phenotype_genes) == 0) {
       next()
     } else if (length(phenotype_genes) == 1) {
       gene2phenotype_closeness[,phenotype_index] <-
@@ -63,61 +65,33 @@ cipher.leave_one_out = function (
   # Leave-one-out test
   #
 
-  leave_one_out_results <- c()
-  leave_one_out_resolution <- 1e-04
-
   if (show.timestamp)
     timestamp()
-  if (show.progressbar)
-    pb <- txtProgressBar(max = phenotype_num)
 
-  for (phenotype_index in 1:phenotype_num) {
-    setTxtProgressBar(pb, phenotype_index)
+  leave_one_out_resolution <- 1e-04
+  leave_one_out_results <- pbapply(melt(phenotype_gene_relationships), 1, function (indexes) {
+    gene_index <- as.integer(indexes[1])
+    phenotype_index <- as.integer(indexes[2])
+    phenotype_genes <- phenotype_gene_relationships[[indexes[2]]]
+    left_phenotype_genes <- setdiff(phenotype_genes, gene_index)
 
-    phenotype_genes <- phenotype_gene_relationships[[as.character(phenotype_index)]]
-    backup_closeness <- gene2phenotype_closeness[,phenotype_index]
-
-    if (is.null(phenotype_genes)) {
-      # No known relationships to test
-      next()
-    } else if (length(phenotype_genes) == 1) {
+    if (length(left_phenotype_genes) == 0) {
       gene2phenotype_closeness[,phenotype_index] <- 0
-
-      gene_score <- cor(phenotype_similarities[,phenotype_index], t(gene2phenotype_closeness))
-      gene_score[is.na(gene_score)] <- 0
-
-      leave_one_out_results <- c(
-        leave_one_out_results,
-        sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes])
-      )
+    } else if (length(left_phenotype_genes) == 1) {
+      gene2phenotype_closeness[,phenotype_index] <-
+        exp(-gene_distances[,left_phenotype_genes]^2)
     } else {
-      for (phenotype_gene_index in 1:length(phenotype_genes)) {
-        new_phenotype_genes <- phenotype_genes[-phenotype_gene_index]
-        if (length(new_phenotype_genes) == 1) {
-          gene2phenotype_closeness[,phenotype_gene_index] <-
-            exp(-gene_distances[,new_phenotype_genes]^2)
-        } else {
-          gene2phenotype_closeness[,phenotype_gene_index] <-
-            apply(exp(-gene_distances[,new_phenotype_genes]^2), 1, sum)
-        }
-
-        gene_score <- cor(phenotype_similarities[,phenotype_index], t(gene2phenotype_closeness))
-        gene_score[is.na(gene_score)] <- 0
-
-        leave_one_out_results <- c(
-          leave_one_out_results,
-          sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes])
-        )
-      }
+      gene2phenotype_closeness[,phenotype_index] <-
+        apply(exp(-gene_distances[,left_phenotype_genes]^2), 1, sum)
     }
 
-    gene2phenotype_closeness[,phenotype_index] <- backup_closeness
-  }
+    gene_scores <- cor(phenotype_similarities[,phenotype_index], t(gene2phenotype_closeness))
+    gene_scores[is.na(gene_scores)] <- 0
 
+    return(sum(quantile(gene_scores, probs = seq(0, 1, leave_one_out_resolution)) > gene_scores[gene_index]))
+  }, cl = cluster.number)
   leave_one_out_results <- leave_one_out_results * leave_one_out_resolution
 
-  if (show.progressbar)
-    close(pb)
   if (show.timestamp)
     timestamp()
 
