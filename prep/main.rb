@@ -21,3 +21,11 @@ logger.info('Caching OMIM content...')
 system('ruby caching_omim.rb')
 logger.info('Extracting OMIM content...')
 system('ruby extract_omim.rb')
+
+# Prepare the PPIs
+logger.info('Preparing PPIs...')
+system('ruby prepare_ppi.rb')
+
+# Index all inputs
+logger.info('Indexing all inputs...')
+system('ruby index.rb')
