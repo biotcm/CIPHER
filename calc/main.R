@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 #
-# iCIPHER workflow - calculate leave-one-out results
+# CIPHER2 workflow - calculate leave-one-out results
 #
 
 # Install dependencies

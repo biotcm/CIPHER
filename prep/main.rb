@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 #
-# iCIPHER workflow - prepare all input data files
+# CIPHER2 workflow - prepare all input data files
 #
-# This script describes the workflow of iCIPHER. It may take days to finish this
+# This script describes the workflow of CIPHER2. It may take days to finish this
 # pipeline. So it is recommended to run each step separately.
 #
 require 'logger'
