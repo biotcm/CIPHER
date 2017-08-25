@@ -23,15 +23,44 @@ def extract_phenotype_gene_relationships(entry)
 end
 
 # Extract phenotype-MeSH relationships from an OMIM entry
-def extract_phenotype_mesh_relationships(_entry)
-  raise NotImplementedError # TODO
+def extract_phenotype_mesh_relationships(entry)
+  meshs = {}
+  content = ''
+
+  entry['textSectionList'].each do |section|
+    content += section['textSection']['textSectionContent']
+  end
+
+  if entry['clinicalSynopsisExists']
+    if entry['clinicalSynopsis']['oldFormatExists']
+      entry['clinicalSynopsis']['oldFormat'].values.each { |v| content += v }
+    else
+      entry['clinicalSynopsis'].each do |key, value|
+        next unless entry['clinicalSynopsis']["#{key}Exists"] == true
+        content += value
+      end
+    end
+  end
+
+  # Ignore letter cases
+  content = content.downcase
+
+  mesh_tree_table.col('term').each do |mindex, term|
+    counts = term.split(/,\s*/).map do |segment|
+      content.scan(Regexp.new("\\W#{segment}(s|es)?\\W")).size
+    end
+    meshs[mindex] = counts.max if counts.max > 0
+  end
+
+  meshs.tap { |m| yield(m) }
 end
 
 fout = {
   pheno2gene: {
     direct: File.open('../temp/pheno2gene_direct.txt', 'w'),
     extend: File.open('../temp/pheno2gene_extend.txt', 'w')
-  }
+  },
+  pheno2mesh: File.open('../temp/pheno2mesh_freq.txt', 'w')
 }
 
 omim_phenotypes.each do |mim|
@@ -45,5 +74,9 @@ omim_phenotypes.each do |mim|
     end
   end
 
-  # extract_phenotype_mesh_relationships(entry)
+  extract_phenotype_mesh_relationships(entry) do |meshs|
+    meshs.each do |mindex, count|
+      fout[:pheno2mesh].puts [mim, mindex, count].join("\t")
+    end
+  end
 end
