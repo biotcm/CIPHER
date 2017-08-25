@@ -1,4 +1,7 @@
 #!/usr/bin/env Rscript
+#
+# iCIPHER workflow - calculate leave-one-out results
+#
 
 # Install dependencies
 source('https://aidistan.github.io/gist/R/use.packages.R')

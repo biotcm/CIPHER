@@ -17,9 +17,7 @@ logger.info('Checking dependencies...')
 system('bundle install')
 
 # Process OMIM content
-unless File.exist?('temp/omim_content.bin')
-  logger.info('Caching OMIM content...')
-  system('ruby caching_omim.rb')
-  logger.info('Extracting OMIM content...')
-  system('ruby extract_omim.rb')
-end
+logger.info('Caching OMIM content...')
+system('ruby caching_omim.rb')
+logger.info('Extracting OMIM content...')
+system('ruby extract_omim.rb')
