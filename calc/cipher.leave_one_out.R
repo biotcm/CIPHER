@@ -1,4 +1,4 @@
-#!/usr/bin/evn Rscript
+#!/usr/bin/env Rscript
 library(igraph)
 library(pbapply)
 library(reshape2)
