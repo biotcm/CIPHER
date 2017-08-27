@@ -85,8 +85,12 @@ cipher.leave_one_out = function (
         apply(exp(-gene_distances[,left_phenotype_genes]^2), 1, sum)
     }
 
-    gene_scores <- cor(phenotype_similarities[,phenotype_index], t(gene2phenotype_closeness))
-    gene_scores[is.na(gene_scores)] <- 0
+    gene_scores <- cor(
+      phenotype_similarities[,phenotype_index],
+      t(gene2phenotype_closeness),
+      use = 'pairwise.complete.obs'
+    )
+    gene_scores[is.na(gene_scores)] <- -Inf
 
     return(sum(quantile(gene_scores, probs = seq(0, 1, leave_one_out_resolution)) > gene_scores[gene_index]))
   }, cl = cluster.number)
