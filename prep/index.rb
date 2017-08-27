@@ -35,8 +35,8 @@ File.open('../temp/inner_pheno2gene_direct.txt', 'w') do |fout|
   File.open('../temp/pheno2gene_direct.txt').each do |line|
     col = line.chomp.split("\t").map.with_index do |c, i|
       i.zero? ? pheno[c] : gene[c]
-    end
-    fout.puts col.compact.join("\t")
+    end.compact
+    fout.puts col.join("\t") if col.size > 1
   end
 end
 
@@ -44,8 +44,8 @@ File.open('../temp/inner_pheno2gene_extend.txt', 'w') do |fout|
   File.open('../temp/pheno2gene_extend.txt').each do |line|
     col = line.chomp.split("\t").map.with_index do |c, i|
       i.zero? ? pheno[c] : gene[c]
-    end
-    fout.puts col.compact.join("\t")
+    end.compact
+    fout.puts col.join("\t") if col.size > 1
   end
 end
 

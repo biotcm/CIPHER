@@ -69,7 +69,8 @@ omim_phenotypes.each do |mim|
   entry = BioTCM::Databases::OMIM.get(mim)
 
   extract_phenotype_gene_relationships(entry) do |genes|
-    %i[direct extend].each do |scope|
+    genes.each_key do |scope|
+      next if genes[scope].empty?
       fout[:pheno2gene][scope].puts genes[scope].unshift(mim).join("\t")
     end
   end
