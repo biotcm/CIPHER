@@ -13,8 +13,8 @@ rownames(dict$phenotypes) <- dict$phenotype$mimNumber
 colnames(dict$mesh_terms) <- c('index', 'mindex', 'term', 'parent')
 rownames(dict$mesh_terms) <- dict$mesh_terms$mindex
 
-# Load data files
-cat('Loading data files...\n')
+# Load pheno2mesh
+cat('Loading pheno2mesh frequences...\n')
 pheno2mesh <- read.table('../temp/inner_pheno2mesh_freq.txt')
 pheno2mesh <- sparseMatrix(i = pheno2mesh[,1], j = pheno2mesh[,2], x = pheno2mesh[,3])
 pheno2mesh <- as.matrix(pheno2mesh)
@@ -40,12 +40,16 @@ gw[is.infinite(gw)] <- 0
 
 # Calculate local weights
 cat('Calculating local weights...\n')
-lw <- pheno2mesh / apply(pheno2mesh, 1, max)
-lw[is.nan(lw)] <- 0
+pheno2mesh <- pheno2mesh / apply(pheno2mesh, 1, max)
+pheno2mesh[is.nan(pheno2mesh)] <- 0
+
+# Calculate mesh profiles
+cat('Calculating pheno2mesh profiles...\n')
+pheno2mesh <- t(t(pheno2mesh) * gw)
 
 # Calcualte similarities
 cat('Calculating similarities...\n')
-phenotype_similarities <- cosine_simil(t(t(lw) * gw))
+phenotype_similarities <- cosine_simil(pheno2mesh)
 
 # Save the result matrix
 write.table(
