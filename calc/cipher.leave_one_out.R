@@ -3,61 +3,44 @@ library(igraph)
 library(pbapply)
 library(reshape2)
 
+# ppi        - protein-protein interactions
+# pheno_sim  - phenotype similarities
+# pheno2gene - phenotype-gene relationships
 cipher.leave_one_out = function (
-  phenotype_similarities_filepath,
-  protein_protein_interactions_filepath,
-  phenotype_gene_relations_filepath,
+  ppi, pheno_sim, pheno2gene,
   cluster.number = 1,
-  show.timestamp = TRUE
+  print.timestamp = TRUE
 ) {
 
-  if (show.timestamp)
-    timestamp()
-
   #
-  # Load inputs
+  # Prepare necessary data
   #
 
-  # Phenotype-phenotype similarities
-  cat('Loading phenotype similarities...\n')
-  phenotype_similarities <- read.table(phenotype_similarities_filepath)
+  if (print.timestamp)
+    timestamp(prefix = '', suffix = '\tpreparing necessary data...')
 
-  # Protein-protein interactions
-  cat('Loading protein-protein interactions...\n')
-  ppi <- read.table(protein_protein_interactions_filepath)
+  gene_num <- max(ppi)
+  pheno_num <- length(pheno_sim)
+
   ppi_net <- graph_from_edgelist(as.matrix(ppi), directed = F)
   gene_distances <- distances(ppi_net)
-
-  # Phenotype-gene relationships (strings as keys)
-  cat('Loading phenotype-gene relationships...\n')
-  phenotype_gene_relationships <- list()
-  fin <- file(phenotype_gene_relations_filepath)
-  for (col in strsplit(readLines(fin), "\t")) {
-    phenotype_gene_relationships[[col[1]]] <- unique(as.numeric(col[2:length(col)]))
-  }
-  close(fin)
-
-  # Frequently-used numbers
-  gene_num <- max(ppi)
-  phenotype_num <- length(phenotype_similarities)
 
   #
   # Calculate gene-phenotype closeness
   #
 
-  cat('Calculating gene-phenotype closeness...\n')
-  gene2phenotype_closeness <- matrix(data = 0, nrow = gene_num, ncol = phenotype_num)
+  if (print.timestamp)
+    timestamp(prefix = '', suffix = '\tcalculating gene2pheno closeness...')
 
-  for (phenotype_index in 1:phenotype_num) {
-    phenotype_genes <- phenotype_gene_relationships[[as.character(phenotype_index)]]
-    if (length(phenotype_genes) == 0) {
+  gene2pheno <- matrix(data = 0, nrow = gene_num, ncol = pheno_num)
+  for (pheno_index in 1:pheno_num) {
+    pheno_genes <- pheno2gene[[as.character(pheno_index)]]
+    if (length(pheno_genes) == 0) {
       next()
-    } else if (length(phenotype_genes) == 1) {
-      gene2phenotype_closeness[,phenotype_index] <-
-        exp(-gene_distances[,phenotype_genes]^2)
+    } else if (length(pheno_genes) == 1) {
+      gene2pheno[,pheno_index] <- exp(-gene_distances[,pheno_genes]^2)
     } else {
-      gene2phenotype_closeness[,phenotype_index] <-
-        apply(exp(-gene_distances[,phenotype_genes]^2), 1, sum)
+      gene2pheno[,pheno_index] <- apply(exp(-gene_distances[,pheno_genes]^2), 1, sum)
     }
   }
 
@@ -65,39 +48,39 @@ cipher.leave_one_out = function (
   # Leave-one-out test
   #
 
-  if (show.timestamp)
-    timestamp()
+  if (print.timestamp)
+    timestamp(prefix = '', suffix = '\tstart leave-one-out test...')
 
   leave_one_out_resolution <- 1e-04
-  leave_one_out_results <- pbapply(melt(phenotype_gene_relationships), 1, function (indexes) {
+  leave_one_out_results <- pbapply(melt(pheno2gene), 1, function (indexes) {
     gene_index <- as.integer(indexes[1])
-    phenotype_index <- as.integer(indexes[2])
-    phenotype_genes <- phenotype_gene_relationships[[indexes[2]]]
-    left_phenotype_genes <- setdiff(phenotype_genes, gene_index)
+    pheno_index <- as.integer(indexes[2])
+    pheno_genes <- pheno2gene[[indexes[2]]]
+    left_pheno_genes <- setdiff(pheno_genes, gene_index)
 
-    if (length(left_phenotype_genes) == 0) {
-      gene2phenotype_closeness[,phenotype_index] <- 0
-    } else if (length(left_phenotype_genes) == 1) {
-      gene2phenotype_closeness[,phenotype_index] <-
-        exp(-gene_distances[,left_phenotype_genes]^2)
+    if (length(left_pheno_genes) == 0) {
+      gene2pheno[,pheno_index] <- 0
+    } else if (length(left_pheno_genes) == 1) {
+      gene2pheno[,pheno_index] <- exp(-gene_distances[,left_pheno_genes]^2)
     } else {
-      gene2phenotype_closeness[,phenotype_index] <-
-        apply(exp(-gene_distances[,left_phenotype_genes]^2), 1, sum)
+      gene2pheno[,pheno_index] <- apply(exp(-gene_distances[,left_pheno_genes]^2), 1, sum)
     }
 
-    gene_scores <- cor(
-      phenotype_similarities[,phenotype_index],
-      t(gene2phenotype_closeness),
-      use = 'pairwise.complete.obs'
-    )
+    gene_scores <- cor(pheno_sim[,pheno_index], t(gene2pheno), use = 'pairwise.complete.obs')
     gene_scores[is.na(gene_scores)] <- -Inf
+    percentage <- leave_one_out_resolution * sum(
+      quantile(gene_scores, probs = seq(0, 1, leave_one_out_resolution))
+      > gene_scores[gene_index]
+    )
 
-    return(sum(quantile(gene_scores, probs = seq(0, 1, leave_one_out_resolution)) > gene_scores[gene_index]))
+    if (!interactive() & print.timestamp)
+      timestamp(prefix = '', suffix = paste('', pheno_index, gene_index, percentage, sep = '\t'))
+
+    return(percentage)
   }, cl = cluster.number)
-  leave_one_out_results <- leave_one_out_results * leave_one_out_resolution
 
-  if (show.timestamp)
-    timestamp()
+  if (print.timestamp)
+    timestamp(prefix = '', suffix = '\tcipher.leave_one_out completed!')
 
   return(leave_one_out_results)
 }
