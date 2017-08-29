@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+library('Matrix')
 
 # Load dependencies
 invisible(sapply(c(
@@ -17,7 +18,7 @@ invisible(sapply(c(
 # For cosine similarity calculation
 calc.cosine_sim <- function (m) {
   # Remove empty columns
-  m <- m[, -which(apply(m, 2, sum) == 0)]
+  m <- m[, apply(m, 2, function (c) sum(c == 0) != length(c))]
 
   # Compute cosine
   # n <- forceSymmetric(m %*% t(m)) # numerator
@@ -30,8 +31,6 @@ calc.cosine_sim <- function (m) {
 
 # For phenotype similarity calculation
 calc.pheno_sim <- function () {
-  library('Matrix')
-
   # Load dictionaries
   cat('Loading dictionaries...\n')
   dict = list(
@@ -89,6 +88,16 @@ calc.pheno_sim <- function () {
   save(pheno_sim, file = '../temp/inner_pheno_sim.Rdata')
 }
 
+# For mesh-mesh interactions loading
+read.mmi <- function (path) {
+  mesh <- read.table(path, sep = "\t", quote = "", na.strings = "", stringsAsFactors = F)
+  rownames(mesh) <- mesh[,2]
+
+  mmi <- cbind(mesh[mesh[,2],1], mesh[mesh[,4],1])
+  mmi <- mmi[!is.na(mmi[,1]) & !is.na(mmi[,2]),]
+  return(mmi)
+}
+
 # For phenotype-gene relationship loading
 read.pheno2gene <- function (path) {
   pheno2gene <- list()
@@ -102,10 +111,31 @@ read.pheno2gene <- function (path) {
   return(pheno2gene)
 }
 
-# For phenotype-gene relationship reduction
-reduce.pheno2gene <- function (pheno2gene, to = max(as.integer(names(pheno2gene)))) {
-  for (n in names(pheno2gene)[as.integer(names(pheno2gene)) > to]) {
-    pheno2gene[[n]] <- NULL
+# For phenotype-mesh relationship loading
+read.pheno2mesh <- function (path) {
+  pheno2mesh <- list()
+
+  tab <- read.table(path)
+  for (ri in 1:nrow(tab)) {
+    pheno_index <- as.character(tab[ri, 1])
+    mesh_index <- as.numeric(tab[ri, 2])
+    count <- tab[ri, 3]
+
+    if (count < 5) next()
+    if (is.null(pheno2mesh[[pheno_index]])) {
+      pheno2mesh[[pheno_index]] <- c(mesh_index)
+    } else {
+      pheno2mesh[[pheno_index]] <- c(pheno2mesh[[pheno_index]], mesh_index)
+    }
   }
-  return(pheno2gene)
+
+  return(pheno2mesh)
+}
+
+# For phenotype relationship reduction
+reduce.pheno_list <- function (pheno_list, to = max(as.integer(names(pheno_list)))) {
+  for (n in names(pheno_list)[as.integer(names(pheno_list)) > to]) {
+    pheno_list[[n]] <- NULL
+  }
+  return(pheno_list)
 }
