@@ -20,7 +20,7 @@ cipher.leave_one_out = function (
     timestamp(prefix = '', suffix = '\tpreparing necessary data...')
 
   gene_num <- max(ppi)
-  pheno_num <- length(pheno_sim)
+  pheno_num <- nrow(pheno_sim)
 
   ppi_net <- graph_from_edgelist(as.matrix(ppi), directed = F)
   gene_distances <- distances(ppi_net)
@@ -51,7 +51,6 @@ cipher.leave_one_out = function (
   if (print.timestamp)
     timestamp(prefix = '', suffix = '\tstart leave-one-out test...')
 
-  leave_one_out_resolution <- 1e-04
   leave_one_out_results <- pbapply(melt(pheno2gene), 1, function (indexes) {
     gene_index <- as.integer(indexes[1])
     pheno_index <- as.integer(indexes[2])
@@ -68,10 +67,7 @@ cipher.leave_one_out = function (
 
     gene_scores <- cor(pheno_sim[,pheno_index], t(gene2pheno), use = 'pairwise.complete.obs')
     gene_scores[is.na(gene_scores)] <- -Inf
-    percentage <- leave_one_out_resolution * sum(
-      quantile(gene_scores, probs = seq(0, 1, leave_one_out_resolution))
-      > gene_scores[gene_index]
-    )
+    percentage <- sum(quantile(gene_scores, probs = seq(0, 1, 1e-04)) > gene_scores[gene_index]) * 1e-04
 
     if (!interactive() & print.timestamp)
       timestamp(prefix = '', suffix = paste('', pheno_index, gene_index, percentage, sep = '\t'))

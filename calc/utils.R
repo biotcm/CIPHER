@@ -2,9 +2,9 @@
 
 # Load dependencies
 invisible(sapply(c(
+  'ggplot2',
   'igraph',
   'pbapply',
-  'ggplot2',
   'reshape2'
 ), function (pkg) {
   if (!requireNamespace(pkg))
