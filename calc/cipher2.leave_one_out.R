@@ -77,7 +77,7 @@ cipher2.leave_one_out = function (
       pheno_gene_score[is.na(pheno_gene_score)] <- 0
       sim <- 0.95 * sim + 0.05 * calc.cosine_sim(pheno_gene_score)
       pheno_mesh_score <- cor(sim, t(mesh2pheno), use = 'pairwise.complete.obs')
-      pheno_mesh_score[is.na(pheno_gene_score)] <- 0
+      pheno_mesh_score[is.na(pheno_mesh_score)] <- 0
       sim <- 0.95 * sim + 0.05 * calc.cosine_sim(pheno_mesh_score)
 
       mad <- max(abs(sim - old_sim))

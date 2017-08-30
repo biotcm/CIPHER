@@ -24,9 +24,9 @@ print.logging('info', 'Loading phenotype-mesh relationships...')
 pheno2mesh <- read.pheno2mesh('../temp/inner_pheno2mesh_freq.txt')
 
 # !!!FOR TEST!!!
-pheno_sim <- pheno_sim[1:1000, 1:1000]
-pheno2gene <- reduce.pheno_list(pheno2gene, 1000)
-pheno2mesh <- reduce.pheno_list(pheno2mesh, 1000)
+pheno_sim <- pheno_sim[1:100, 1:100]
+pheno2gene <- reduce.pheno_list(pheno2gene, 100)
+pheno2mesh <- reduce.pheno_list(pheno2mesh, 100)
 
 # Load the results
 if (file.exists('.Rdata')) {

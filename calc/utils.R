@@ -21,12 +21,16 @@ calc.cosine_sim <- function (m) {
   m <- m[, apply(m, 2, function (c) sum(c == 0) != length(c))]
 
   # Compute cosine
-  # n <- forceSymmetric(m %*% t(m)) # numerator
   n <- m %*% t(m) # numerator
   d <- sqrt(diag(n))
-  # d <- forceSymmetric(d %*% t(d)) # denominator
   d <- d %*% t(d) # denominator
-  return(n / d)
+
+  # Remove NaNs
+  m <- n / d
+  m[is.nan(m)] <- 0
+  diag(m) <- 1
+
+  return(m)
 }
 
 # For phenotype similarity calculation
