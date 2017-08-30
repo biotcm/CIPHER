@@ -67,21 +67,36 @@ cipher2.leave_one_out = function (
     }
   }
 
-  iterate <- function (sim) {
-    old_mad <- 0 # Max Abs Difference
+  sub_iterate <- function (pheno_sim, pheno_index) {
+    pheno_gene_score <- cor(pheno_sim, t(gene2pheno), use = 'pairwise.complete.obs')
+    pheno_mesh_score <- cor(pheno_sim, t(mesh2pheno), use = 'pairwise.complete.obs')
+
+    sim <- pheno_sim[pheno_index,]
+    old_mad <- 0
+    old_sim <- sim
 
     for (i in 1:10) {
-      old_sim <- sim
-
-      pheno_gene_score <- cor(sim, t(gene2pheno), use = 'pairwise.complete.obs')
+      pheno_gene_score[pheno_index,] <- cor(sim, t(gene2pheno))
       pheno_gene_score[is.na(pheno_gene_score)] <- 0
-      sim <- 0.95 * sim + 0.05 * calc.cosine_sim(pheno_gene_score)
-      pheno_mesh_score <- cor(sim, t(mesh2pheno), use = 'pairwise.complete.obs')
-      pheno_mesh_score[is.na(pheno_mesh_score)] <- 0
-      sim <- 0.95 * sim + 0.05 * calc.cosine_sim(pheno_mesh_score)
+      tmp <- apply(pheno_gene_score, 1, function (v) sqrt(sum(v ** 2)))
+      tmp <- pheno_gene_score %*% pheno_gene_score[pheno_index,] / tmp / tmp[pheno_index]
+      sim <- 0.95 * sim + 0.05 * tmp
 
+      pheno_mesh_score[pheno_index,] <- cor(sim, t(mesh2pheno))
+      pheno_mesh_score[is.na(pheno_mesh_score)] <- 0
+      tmp <- apply(pheno_mesh_score, 1, function (v) sqrt(sum(v ** 2)))
+      tmp <- pheno_mesh_score %*% pheno_mesh_score[pheno_index,] / tmp / tmp[pheno_index]
+      sim <- 0.95 * sim + 0.05 * tmp
+
+      # Max Abs Difference
       mad <- max(abs(sim - old_sim))
-      if (abs(mad - old_mad) < 0.1) return(sim)
+
+      if (abs(mad - old_mad) < 0.01) {
+        return(sim)
+      } else {
+        old_mad <- mad
+        old_sim <- sim
+      }
     }
 
     return(sim)
@@ -108,12 +123,7 @@ cipher2.leave_one_out = function (
       gene2pheno[,pheno_index] <- apply(exp(-gene_distances[,left_pheno_genes]^2), 1, sum)
     }
 
-    # Iterate
-    if (!interactive() & verbose)
-      print.logging('info', pheno_index, gene_index, 'iterating')
-    pheno_sim <- iterate(pheno_sim)
-
-    gene_scores <- cor(pheno_sim[,pheno_index], t(gene2pheno), use = 'pairwise.complete.obs')
+    gene_scores <- cor(sub_iterate(pheno_sim, pheno_index), t(gene2pheno), use = 'pairwise.complete.obs')
     gene_scores[is.na(gene_scores)] <- -1
     percentage <- sum(quantile(gene_scores, probs = seq(0, 1, 1e-04)) > gene_scores[gene_index]) * 1e-04
 
