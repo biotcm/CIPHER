@@ -12,15 +12,15 @@ if (!file.exists('../temp/inner_pheno_sim.Rdata')) {
 }
 
 # Load input data
-cat('Loading protein-protein interactions...\n')
+print.logging('info', 'Loading protein-protein interactions...')
 ppi <- read.table('../temp/inner_ppi.txt')
-cat('Loading phenotype similarities...\n')
+print.logging('info', 'Loading phenotype similarities...')
 load('../temp/inner_pheno_sim.Rdata')
-cat('Loading phenotype-gene relationships...\n')
+print.logging('info', 'Loading phenotype-gene relationships...')
 pheno2gene <- read.pheno2gene('../temp/inner_pheno2gene_direct.txt')
-cat('Loading mesh-mesh interactions...\n')
+print.logging('info', 'Loading mesh-mesh interactions...')
 mmi <- read.mmi('../temp/inter_mesh.txt')
-cat('Loading phenotype-mesh relationships...\n')
+print.logging('info', 'Loading phenotype-mesh relationships...')
 pheno2mesh <- read.pheno2mesh('../temp/inner_pheno2mesh_freq.txt')
 
 # !!!FOR TEST!!!
@@ -58,8 +58,8 @@ for (name in names(results)) {
     function (x, cdf) { (cdf(x-step) + cdf(x)) / 2 * step },
     ecdf(results[[name]])
   ))
+  print.logging('info', name, areas[[name]])
 }
-print(areas)
 
 # # Plot the curves
 # ggplot(melt(results)) + theme_bw() +

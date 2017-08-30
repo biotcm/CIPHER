@@ -3,13 +3,13 @@ source('utils.R')
 source('cipher.leave_one_out.R')
 
 # Load input data
-cat('Loading protein-protein interactions...\n')
+print.logging('info', 'Loading protein-protein interactions...')
 ppi <- read.table('../data/old_hprd/inner_ppi.txt')
 # ppi <- read.table('../data/old_extended/inner_ppi.txt')
-cat('Loading phenotype similarities...\n')
+print.logging('info', 'Loading phenotype similarities...')
 pheno_sim <- read.table('../data/old_hprd/inner_phenotype_similarity.txt')
 # pheno_sim <- read.table('../data/old_extended/inner_phenotype_similarity.txt')
-cat('Loading phenotype-gene relationships...\n')
+print.logging('info', 'Loading phenotype-gene relationships...')
 pheno2gene <- read.pheno2gene('../data/old_hprd/inner_phenotype_gene_relation.txt')
 # pheno2gene <- read.pheno2gene('../data/old_extended/inner_phenotype_gene_relation.txt')
 
@@ -21,8 +21,8 @@ if (file.exists('.Rdata')) {
 }
 
 # Run main function
-results$old_hprd <- cipher.leave_one_out(
-# results$old_extend <- cipher.leave_one_out(
+results$old_hprd_v1 <- cipher.leave_one_out(
+# results$old_extend_v1 <- cipher.leave_one_out(
   ppi, pheno_sim, pheno2gene,
   cluster.number = 2
 )
@@ -39,8 +39,8 @@ for (name in names(results)) {
     function (x, cdf) { (cdf(x-step) + cdf(x)) / 2 * step },
     ecdf(results[[name]])
   ))
+  print.logging('info', name, areas[[name]])
 }
-print(areas)
 
 # # Plot the curves
 # ggplot(melt(results)) + theme_bw() +

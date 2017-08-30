@@ -88,6 +88,11 @@ calc.pheno_sim <- function () {
   save(pheno_sim, file = '../temp/inner_pheno_sim.Rdata')
 }
 
+# For scoped logging printing
+print.logging <- function(scope, ...) {
+  cat(paste0(paste(date(), paste0('[', scope, ']'), ..., sep = "\t"), "\n"))
+}
+
 # For mesh-mesh interactions loading
 read.mmi <- function (path) {
   mesh <- read.table(path, sep = "\t", quote = "", na.strings = "", stringsAsFactors = F)
