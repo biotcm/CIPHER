@@ -15,6 +15,9 @@ invisible(sapply(c(
   attachNamespace(pkg)
 }))
 
+# Load optional dependencies
+if (requireNamespace('WGCNA')) attachNamespace('WGCNA')
+
 # For cosine similarity calculation
 calc.cosine_sim <- function (m) {
   # Remove empty columns
