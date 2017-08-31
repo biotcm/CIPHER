@@ -9,7 +9,7 @@ invisible(sapply(c(
   'reshape2'
 ), function (pkg) {
   if (!requireNamespace(pkg))
-    install.packages()
+    install.packages(pkg)
 
   unloadNamespace(pkg)
   attachNamespace(pkg)
