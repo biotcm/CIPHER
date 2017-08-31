@@ -68,24 +68,24 @@ cipher2.leave_one_out = function (
   }
 
   sub_iterate <- function (pheno_sim, pheno_index) {
-    pheno_gene_score <- cor(pheno_sim, t(gene2pheno), use = 'pairwise.complete.obs')
-    pheno_mesh_score <- cor(pheno_sim, t(mesh2pheno), use = 'pairwise.complete.obs')
+    gene_scores <- cor(pheno_sim, t(gene2pheno), use = 'pairwise.complete.obs')
+    mesh_scores <- cor(pheno_sim, t(mesh2pheno), use = 'pairwise.complete.obs')
 
     sim <- pheno_sim[pheno_index,]
     old_mad <- 0
     old_sim <- sim
 
     for (i in 1:10) {
-      pheno_gene_score[pheno_index,] <- cor(sim, t(gene2pheno))
-      pheno_gene_score[is.na(pheno_gene_score)] <- 0
-      tmp <- apply(pheno_gene_score, 1, function (v) sqrt(sum(v ** 2)))
-      tmp <- pheno_gene_score %*% pheno_gene_score[pheno_index,] / tmp / tmp[pheno_index]
+      gene_scores[pheno_index,] <- cor(sim, t(gene2pheno))
+      gene_scores[is.na(gene_scores)] <- 0
+      tmp <- apply(gene_scores, 1, function (v) sqrt(sum(v ** 2)))
+      tmp <- gene_scores %*% gene_scores[pheno_index,] / tmp / tmp[pheno_index]
       sim <- 0.95 * sim + 0.05 * tmp
 
-      pheno_mesh_score[pheno_index,] <- cor(sim, t(mesh2pheno))
-      pheno_mesh_score[is.na(pheno_mesh_score)] <- 0
-      tmp <- apply(pheno_mesh_score, 1, function (v) sqrt(sum(v ** 2)))
-      tmp <- pheno_mesh_score %*% pheno_mesh_score[pheno_index,] / tmp / tmp[pheno_index]
+      mesh_scores[pheno_index,] <- cor(sim, t(mesh2pheno))
+      mesh_scores[is.na(mesh_scores)] <- 0
+      tmp <- apply(mesh_scores, 1, function (v) sqrt(sum(v ** 2)))
+      tmp <- mesh_scores %*% mesh_scores[pheno_index,] / tmp / tmp[pheno_index]
       sim <- 0.95 * sim + 0.05 * tmp
 
       # Max Abs Difference
