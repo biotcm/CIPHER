@@ -1,5 +1,4 @@
 #!/usr/bin/env Rscript
-library('Matrix')
 
 # Load dependencies
 invisible(sapply(c(
@@ -8,11 +7,8 @@ invisible(sapply(c(
   'pbapply',
   'reshape2'
 ), function (pkg) {
-  if (!requireNamespace(pkg))
-    install.packages(pkg)
-
-  unloadNamespace(pkg)
-  attachNamespace(pkg)
+  if (!requireNamespace(pkg)) install.packages(pkg)
+  try(attachNamespace('ggplot2'), silent = TRUE)
 }))
 
 # Load optional dependencies
@@ -36,68 +32,27 @@ calc.cosine_sim <- function (m) {
   return(m)
 }
 
-# For phenotype similarity calculation
-calc.pheno_sim <- function () {
-  # Load dictionaries
-  cat('Loading dictionaries...\n')
-  dict = list(
-    phenotypes = read.table('../temp/inter_pheno.txt', sep = "\t"),
-    mesh_terms = read.table('../temp/inter_mesh.txt', sep = "\t", quote = "", na.strings = "", stringsAsFactors = F)
-  )
-  colnames(dict$phenotypes) <- c('index', 'mimNumber')
-  rownames(dict$phenotypes) <- dict$phenotype$mimNumber
-  colnames(dict$mesh_terms) <- c('index', 'mindex', 'term', 'parent')
-  rownames(dict$mesh_terms) <- dict$mesh_terms$mindex
-
-  # Load pheno2mesh
-  cat('Loading pheno2mesh frequences...\n')
-  pheno2mesh <- read.table('../temp/inner_pheno2mesh_freq.txt')
-  pheno2mesh <- sparseMatrix(i = pheno2mesh[,1], j = pheno2mesh[,2], x = pheno2mesh[,3])
-  pheno2mesh <- as.matrix(pheno2mesh)
-
-  # Define some useful constants
-  num_pheno <- min(nrow(dict$mesh_terms), ncol(pheno2mesh))
-
-  # Increase hypernyms
-  cat('Increasing hypernyms...\n')
-  for (i in rev(1:num_pheno)) {
-    if (sum(pheno2mesh[,i]) == 0) next()
-    p_m <- dict$mesh_terms[i, 'parent']
-    if (is.na(p_m)) next()
-    p_i <- dict$mesh_terms[p_m, 'index']
-
-    pheno2mesh[,p_i] <- pheno2mesh[,p_i] + pheno2mesh[,i] / sum(dict$mesh_terms$parent == p_m, na.rm = T)
-  }
-
-  # Calculate global weights
-  cat('Calculating global weights...\n')
-  gw <- log2(num_pheno / apply(pheno2mesh, 2, function (x) sum(x > 0)))
-  gw[is.infinite(gw)] <- 0
-
-  # Calculate local weights
-  cat('Calculating local weights...\n')
-  pheno2mesh <- pheno2mesh / apply(pheno2mesh, 1, max)
-  pheno2mesh[is.nan(pheno2mesh)] <- 0
-
-  # Calculate mesh profiles
-  cat('Calculating pheno2mesh profiles...\n')
-  pheno2mesh <- t(t(pheno2mesh) * gw)
-
-  # Calcualte similarities
-  cat('Calculating similarities...\n')
-  pheno_sim <- calc.cosine_sim(pheno2mesh)
-
-  # Save the result matrix
-  # write.table(
-  #   pheno_sim, file = '../temp/inner_pheno_sim.txt',
-  #   quote = F, sep = "\t", row.names = F, col.names = F
-  # )
-  save(pheno_sim, file = '../temp/inner_pheno_sim.Rdata')
-}
-
 # For scoped logging printing
 print.logging <- function(scope, ...) {
   cat(paste0(paste(date(), paste0('[', scope, ']'), ..., sep = "\t"), "\n"))
+}
+
+# For dictionaries loading
+read.dict <- function (gene_path, mesh_path, pheno_path) {
+  dict = list(
+    gene  = read.table(gene_path, sep = "\t"),
+    mesh  = read.table(mesh_path, sep = "\t", quote = "", na.strings = "", stringsAsFactors = F),
+    pheno = read.table(pheno_path, sep = "\t")
+  )
+
+  colnames(dict$gene) <- c('index', 'symbol')
+  rownames(dict$gene) <- dict$gene$symbol
+  colnames(dict$mesh) <- c('index', 'mindex', 'term', 'parent')
+  rownames(dict$mesh) <- dict$mesh$mindex
+  colnames(dict$pheno) <- c('index', 'mimNumber')
+  rownames(dict$pheno) <- dict$pheno$mimNumber
+
+  return(dict)
 }
 
 # For mesh-mesh interactions loading
@@ -150,4 +105,25 @@ reduce.pheno_list <- function (pheno_list, to = max(as.integer(names(pheno_list)
     pheno_list[[n]] <- NULL
   }
   return(pheno_list)
+}
+
+# For genome-wide leave-one-out result summary
+summary.genome_wide <- function (results) {
+  step <- 0.0001
+  for (name in names(results)) {
+    area <- sum(sapply(
+      seq(0, 1, step)[-1],
+      function (x, cdf) { (cdf(x-step) + cdf(x)) / 2 * step },
+      ecdf(results[[name]])
+    ))
+    print.logging('info', name, area)
+  }
+
+  # Plot the curves
+  data <- melt(results)
+  colnames(data) <- c('Rank', 'Set')
+  ggplot(data) + theme_bw() +
+    stat_ecdf(aes(x = Rank, color = Set), geom = 'line') +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = F) +
+    labs(x = NULL, y = NULL)
 }

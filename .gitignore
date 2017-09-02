@@ -1,6 +1,6 @@
 # R-related files
-.Rdata
-.Rhistory
+*.RData
+*.Rhistory
 
 /data
 /temp
