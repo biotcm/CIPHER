@@ -1,4 +1,4 @@
-#!/usr/bin/evn Rscript
+#!/usr/bin/env Rscript
 # Written by: Aidi Tan, 2017
 source('https://aidistan.github.io/gist/R/use.packages.R')
 source('https://aidistan.github.io/gist/R/txtProgressBarETA.R')
@@ -20,13 +20,13 @@ gene_distances <- distances(ppi_net)
 phenotype_gene_relationships <- list()
 fin <- file('inner_phenotype_gene_relation.txt')
 for (col in strsplit(readLines(fin), "\t")) {
-  phenotype_gene_relationships[[col[1]]] <- as.numeric(c(col[2:length(col)]))
+  phenotype_gene_relationships[[col[1]]] <- unique(as.numeric(col[2:length(col)]))
 }
 close(fin)
 
 # Frequently-used numbers
 gene_num <- max(ppi)
-phenotype_num <- length(phenotype_similarities)
+phenotype_num <- nrow(phenotype_similarities)
 
 #
 # Calculate gene-phenotype closeness
@@ -35,7 +35,7 @@ phenotype_num <- length(phenotype_similarities)
 gene2phenotype_closeness <- matrix(data = 0, nrow = gene_num, ncol = phenotype_num)
 for (phenotype_index in 1:phenotype_num) {
   phenotype_genes <- phenotype_gene_relationships[[as.character(phenotype_index)]]
-  if (is.null(phenotype_genes)) {
+  if (length(phenotype_genes) == 0) {
     next()
   } else if (length(phenotype_genes) == 1) {
     gene2phenotype_closeness[,phenotype_index] <-
@@ -62,7 +62,7 @@ for (phenotype_index in 1:phenotype_num) {
   phenotype_genes <- phenotype_gene_relationships[[as.character(phenotype_index)]]
   backup_closeness <- gene2phenotype_closeness[,phenotype_index]
 
-  if (is.null(phenotype_genes)) {
+  if (length(phenotype_genes) == 0) {
     next() # no known relationships to test
   } else if (length(phenotype_genes) == 1) {
     gene2phenotype_closeness[,phenotype_index] <- 0
@@ -84,7 +84,7 @@ for (phenotype_index in 1:phenotype_num) {
       }
 
       gene_score <- cor(phenotype_similarities[,phenotype_index], t(gene2phenotype_closeness))
-      gene_score[is.na(gene_score)] <- 0
+      gene_score[is.na(gene_score)] <- -Inf
 
       leave_one_out_results <- c(leave_one_out_results,
         sum(quantile(gene_score, probs = seq(0, 1, leave_one_out_resolution)) > gene_score[phenotype_genes]))
