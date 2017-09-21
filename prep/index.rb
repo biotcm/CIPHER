@@ -31,21 +31,14 @@ File.open('../temp/inner_ppi.txt', 'w') do |fout|
   end
 end
 
-File.open('../temp/inner_pheno2gene_direct.txt', 'w') do |fout|
-  File.open('../temp/pheno2gene_direct.txt').each do |line|
-    col = line.chomp.split("\t").map.with_index do |c, i|
-      i.zero? ? pheno[c] : gene[c]
-    end.compact
-    fout.puts col.join("\t") if col.size > 1
-  end
-end
-
-File.open('../temp/inner_pheno2gene_extend.txt', 'w') do |fout|
-  File.open('../temp/pheno2gene_extend.txt').each do |line|
-    col = line.chomp.split("\t").map.with_index do |c, i|
-      i.zero? ? pheno[c] : gene[c]
-    end.compact
-    fout.puts col.join("\t") if col.size > 1
+%w[direct extend curation].each do |scope|
+  File.open("../temp/inner_pheno2gene_#{scope}.txt", 'w') do |fout|
+    File.open("../temp/pheno2gene_#{scope}.txt").each do |line|
+      col = line.chomp.split("\t").map.with_index do |c, i|
+        i.zero? ? pheno[c] : gene[c]
+      end.compact
+      fout.puts col.join("\t") if col.size > 1
+    end
   end
 end
 
