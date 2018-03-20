@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# Benchmark test for correlation coefficient calculations
 library(microbenchmark)
 
 m10    <- matrix(rnorm(    100), nrow=10,    ncol= 10)
